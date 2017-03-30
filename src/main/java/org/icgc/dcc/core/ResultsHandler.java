@@ -7,11 +7,15 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.broadinstitute.variant.vcf.*;
 import org.icgc.dcc.release.job.annotate.converter.SnpEffVCFToICGCConverter;
+import org.icgc.dcc.release.job.annotate.model.AnnotatedFileType;
 import org.icgc.dcc.release.job.annotate.model.SecondaryEntity;
+import org.icgc.dcc.release.job.annotate.parser.SnpEffectParser;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
@@ -36,10 +40,10 @@ public class ResultsHandler implements Runnable {
    * State.
    */
   @NonNull
-  private final BlockingQueue<String> queue;
+  private final BlockingQueue<Boolean> queue;
   private final SnpEffVCFToICGCConverter converter;
 
-  public ResultsHandler(@NonNull InputStream input, @NonNull BlockingQueue<String> queue,
+  public ResultsHandler(@NonNull InputStream input, @NonNull BlockingQueue<Boolean> queue,
                         @NonNull String geneBuildVersion) {
     this.input = input;
     this.queue = queue;
@@ -56,8 +60,21 @@ public class ResultsHandler implements Runnable {
         continue;
       }
 
-      queue.put(line);
+      val coding = line.contains("|CODING|");
+
+      queue.put(coding);
+
     }
+  }
+
+  private boolean isCoding(List<String> effectsList) {
+    for (val effect : effectsList) {
+      val snpeff = SnpEffectParser.parse(effect);
+      for (val snp : snpeff) {
+        return snp.getCoding() != null && snp.getCoding().equals("CODING");
+      }
+    }
+    return false;
   }
 
   private static boolean isSkipLine(String line) {

@@ -53,7 +53,7 @@ public class Filter implements CommandLineRunner {
   /**
    * State.
    */
-  private BlockingQueue<String> queue = new ArrayBlockingQueue<String>(100);
+  private BlockingQueue<Boolean> queue = new ArrayBlockingQueue<Boolean>(100);
   private SnpEffProcess process;
   private ExecutorService executor = Executors.newFixedThreadPool(2);
   private PrintStream stream;
@@ -78,7 +78,7 @@ public class Filter implements CommandLineRunner {
   }
 
   @SneakyThrows
-  public String predict(String line) {
+  public Boolean predict(String line) {
     stream.println(line);
     stream.flush();
 
@@ -91,7 +91,7 @@ public class Filter implements CommandLineRunner {
           process.isAlive() ? process.exitValue() : "<still running!>");
     }
 
-    log.info(predictions);
+    log.info(predictions.toString());
     return predictions;
   }
 
@@ -117,7 +117,7 @@ public class Filter implements CommandLineRunner {
     properties.setMaxFileSizeMb(512);
     properties.setReferenceGenomeVersion("GRCh37.75.v1");
     properties.setResourceDir(new File("/tmp/dcc-release"));
-    properties.setResourceUrl("https://artifacts1.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
+    properties.setResourceUrl("https://artifacts.oicr.on.ca/artifactory/simple/dcc-dependencies/org/icgc/dcc");
     properties.setVersion("3.6c");
   }
 
